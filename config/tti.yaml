@@ -1,0 +1,27 @@
+/**/tti:
+  ros__parameters:
+    use_sim_time: false
+
+/**/terminal:
+  ros__parameters:
+    title: 'Transformers TTI Terminal'
+    display: -1
+    fontname: courier
+    fontsize: 15
+    frameless: false
+    input: true
+    line_count: 0
+    opacity: 1.0
+    stylesheet: 'background-color: black; color: #e9e9e9;'
+    stylesheet_window: 'background-color: #FFD700; color white;'
+    geometry:
+    - 0
+    - 0
+    - 1000
+    - 480
+    margin:
+    - 10
+    - 0
+    - 0
+    - 0
+    use_sim_time: false

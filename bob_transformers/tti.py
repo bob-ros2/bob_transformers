@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+#
+# Copyright 2024 BobRos
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+"""This ROS Package integrates `Huggingface Transformers` capabilities into `ROS`.
+"""
 
 import sys
 import os
@@ -6,6 +24,7 @@ import logging
 import rclpy
 from rclpy.node import Node
 from rclpy.logging import LoggingSeverity
+from rcl_interfaces.msg import ParameterDescriptor
 from std_msgs.msg import Header
 from std_msgs.msg import String
 from cv_bridge import CvBridge
@@ -13,7 +32,6 @@ from sensor_msgs.msg import Image
 from bob_msgs.msg import TTImage
 import numpy as np
 import cv2
-
 from diffusers import StableDiffusionPipeline
 from diffusers import StableDiffusionXLPipeline
 import torch
@@ -37,21 +55,35 @@ class TTINode(Node):
                 # CompVis/stable-diffusion-v1-4
                 # stabilityai/stable-diffusion-2
                 # stabilityai/stable-diffusion-xl-base-1.0
-                ('model_id', 'stabilityai/stable-diffusion-xl-base-1.0'),
-                ('pipeline_type', 'StableDiffusionXLPipeline'),
-                ('show', True),
-                ('result_image', os.getenv('TTI_RESULT_IMAGE', '')),
-                ('frame_rate', 1)
+
+                ('model_id', os.getenv('TTI_MODEL_ID', 'CompVis/stable-diffusion-v1-4'),
+                ParameterDescriptor(description=
+                'The Huggingface model_id to be used. Environment variable '
+                'TTI_MODEL_ID. Default: CompVis/stable-diffusion-v1-4')),
+
+                ('pipeline_type', os.getenv('TTI_PIPELINE_TYPE', 'StableDiffusionPipeline'),
+                ParameterDescriptor(description=
+                'To be used diffusion pipeline type. Environment variable TTI_PIPELINE_TYPE. '
+                'Default: StableDiffusionPipeline')),
+
+                ('show', os.getenv('TTI_SHOW', 'false'),
+                ParameterDescriptor(description=
+                'Wether to show produced image. Environment variable TTI_SHOW. '
+                'Default: false')),
+
+                ('result_image', os.getenv('TTI_RESULT_IMAGE', ''),
+                ParameterDescriptor(description=
+                'When provided, where to store the result image. Environment '
+                "variable TTI_RESULT_IMAGE. Default: ''")),
+
+                ('frame_rate', int(os.getenv('TTI_FRAME_RATE', '1')),
+                ParameterDescriptor(description=
+                'Framerate to resent image. Environment '
+                "variable TTI_FRAME_RATE. Default: 1"))
             ])
 
-        self.show = self.get_parameter(
-            'show').get_parameter_value().bool_value
-        self.result_image = self.get_parameter(
-            'result_image').get_parameter_value().string_value
-        self.model_id = self.get_parameter(
-            'model_id').get_parameter_value().string_value
-        self.pipeline_type = self.get_parameter(
-            'pipeline_type').get_parameter_value().string_value
+        self.result_image = self.get_parameter('result_image').value
+        self.pipeline_type = self.get_parameter('pipeline_type').value
         
         self.pub_image = self.create_publisher(
             Image, 'image_raw', 10)
@@ -85,13 +117,13 @@ class TTINode(Node):
 
             if self.pipeline_type == 'StableDiffusionXLPipeline':
                 self.pipe = StableDiffusionXLPipeline.from_pretrained(
-                    self.model_id, 
+                    self.get_parameter('model_id').value, 
                     torch_dtype=torch.float16, 
                     use_safetensors=True, 
                     variant="fp16")
             elif self.pipeline_type == 'StableDiffusionPipeline':
                 self.pipe = StableDiffusionPipeline.from_pretrained(
-                    self.model_id, 
+                    self.get_parameter('model_id').value, 
                     torch_dtype=torch.float16, 
                     use_safetensors=True, 
                     variant="fp16")
@@ -113,7 +145,7 @@ class TTINode(Node):
             self.pub_image.publish(self.image_msg)
             self.get_logger().debug('published image')
 
-        if self.show and len(self.cv_image):
+        if self.get_parameter('show').value and len(self.cv_image):
             cv2.imshow("TTI", self.cv_image)
             cv2.waitKey(1)
 

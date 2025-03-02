@@ -1,0 +1,28 @@
+services:
+  ros:
+    #build:
+    #  context: .
+    #image: bobv2-humble:tti-transformers
+    image: ghcr.io/bob-ros2/bob-transformers-tti-ros:latest-humble
+    volumes:
+      - /home/ros/.cache/huggingface:/root/.cache/huggingface
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd /ros_ws
+        source /opt/ros/humble/setup.bash
+        source ./install/setup.bash
+        ros2 run bob_transformers tti
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+networks:
+  default:
+    name: bobnet
+    external: true

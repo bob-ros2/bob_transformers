@@ -1,4 +1,4 @@
-# ROS Package bob_transformers
+# ROS Package [bob_transformers](https://github.com/bob-ros2/bob_transformers)
 This package integrates `Huggingface Transformers` capabilities into `ROS`.
 
 Related websites:
@@ -83,7 +83,7 @@ networks:
 Text to image ROS node
 
 ### Models
-tested models
+Tested models
 * [`CompVis/stable-diffusion-v1-4`](https://huggingface.co/CompVis/stable-diffusion-v1-4)
 * [`stabilityai/stable-diffusion-2`](https://huggingface.co/stabilityai/stable-diffusion-2)
 * [`stabilityai/stable-diffusion-xl-base-1.0`](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0)
